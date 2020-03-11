@@ -1,19 +1,23 @@
 ---
 title: "GGPLO2 - The First Contact"
 author: "Marco Smolla"
-date: "20 March 2019"
+date: "11 March 2020"
 output:
   prettydoc::html_pretty:
-    theme: cayman
+    toc: true
+    toc_depth: 1
+    number_sections: true
+    theme: architect
     highlight: github
+
 ---
 
-## Grammar of Graphics
-ggplot2 is based on the idea that any graph can be build with the same three components
+# Introduction to GG, the Grammar of Graphics
+`ggplot2` is based on the idea that *any* graph can be build based on three components:
 
-1. Data
-2. Coordinate System
-3. Visual marks representing data (called _geoms_)
+* Data (your raw data input)
+* Coordinate System
+* Visual marks representing data (called _geoms_)
 
 ![](basics1.png)
 
@@ -22,41 +26,49 @@ ggplot2 is based on the idea that any graph can be build with the same three com
 library(ggplot2)
 ```
 
-## Simple example plots
-Let's have a look at simple examples. First we look at the US Census from 1790-1970 and plot the population size over time.
+`ggplot`s biggest problem is the initial hurdle to get started with it. How on earth are you supposed to create a figure with it? Let us start with a data set (the US Census from 1790-1970) that is already loaded in `R`. Next, let us plot the population size over time.
 
-### Populations Recorded by the US Census 
+## Populations Recorded by the US Census 
 ```{r}
 uspop
 uspopDF <- data.frame(year=seq(1790,1970,length.out=19), 
                   pop=c(uspop))
+ggplot() # an empty canvas
 ggplot(data=uspopDF) # data
 ggplot(data=uspopDF, mapping=aes(x=year, y=pop)) # adding mapping
-ggplot(data=uspopDF, mapping=aes(x=year, y=pop)) + geom_point() # adding geom
-ggplot(data=uspopDF, mapping=aes(x=year, y=pop)) + geom_point() + geom_line()
-ggplot(data=uspopDF, mapping=aes(x=year, y=pop)) + geom_point(colour="red") + geom_line()
-ggplot(data=uspopDF, mapping=aes(x=year, y=pop)) + geom_line() + geom_point(colour="red", size=4)
+ggplot(data=uspopDF, mapping=aes(x=year, y=pop)) + geom_point() # adding geom (for a scatter plot)
+ggplot(data=uspopDF, mapping=aes(x=year, y=pop)) + geom_point() + geom_line() #  adding a line plot geom
+ggplot(data=uspopDF, mapping=aes(x=year, y=pop)) + geom_point(colour="red") + geom_line() # clouring the dots (dots behin line)
+ggplot(data=uspopDF, mapping=aes(x=year, y=pop)) + geom_line() + geom_point(colour="red", size=4) # change size 
+```
 
+```{r, warning=FALSE, message=FALSE}
 library(cowplot)
+theme_set(theme_cowplot())
 ggplot(data=uspopDF, mapping=aes(x=year, y=pop)) + geom_point() # adding geom
 ``` 
 
-Now, let's plot the weights of chicken that were on different diets
 
-### Weight of chicks on different diets
+The example shows you how we create a figure step by step. Let's try this again with a different data example, the weights of chicken who received different types of diets.
+
+## Weight of chicks on different diets
 ```{r}
+# have a look at what the data looks like
 head(chickwts)
-ggplot(chickwts) +
-  geom_point(aes(x=feed, y=weight))
+
+# simple plot
+ggplot(data=chickwts) +
+  geom_point(mapping=aes(x=feed, y=weight))
 ```
 
-Maybe this data is better presented as a boxplot
+As some of the points are hidden by others and the real distribution might be hard to see, you might want to plot this as a boxplot:
+
 ```{r}
 ggplot(chickwts) +
   geom_boxplot(aes(x=feed, y=weight))
 ```
 
-## Subsetting your data and adding dimensions
+# Subsetting your data and adding dimensions
 We can also use ggplot to subset our data to make analysis easier. To do this, we expand the instructions of the mapping, that is, what characteristics of the plot (colour, alpha, size, shape) is mapped to which data.
 
 ![](basics2.png) 
@@ -82,15 +94,29 @@ ggplot(ChickWeight) +
   geom_point(aes(x=Time, y=weight, colour=Diet)) + 
   geom_line(aes(x=Time, y=weight, colour=Diet)) + 
   facet_wrap("Diet")
-  # Add grouping
+
+# Add grouping
   ggplot(ChickWeight) + 
     geom_point(aes(x=Time, y=weight, colour=Diet)) + 
     geom_line(aes(x=Time, y=weight, colour=Diet, group=Chick)) + 
     facet_wrap("Diet")
+  
+library(ggsci)
+  ggplot(ChickWeight) + 
+    geom_point(aes(x=Time, y=weight, colour=Diet)) + 
+    geom_line(aes(x=Time, y=weight, colour=Diet, group=Chick)) + 
+    facet_wrap("Diet") +
+    scale_color_npg()
+  
+  ggplot(ChickWeight) + 
+    # geom_point(aes(x=Time, y=weight, colour=Diet)) + 
+    stat_smooth(aes(x=Time, y=weight, colour=Diet)) + 
+    # facet_wrap("Diet", nrow=1) +
+    scale_color_npg()
 ```
 
 
-## Reusing your code
+# Reusing your code
 Let's have a look at some flowers
 
 ```{r}
@@ -111,24 +137,24 @@ p + geom_point(aes(x=Petal.Length, y=Petal.Width), size=3) + ggtitle("Petal")
 ```
 
 
-## Combining plots
+# Combining plots
 Sometimes you want to combine cerveral plots and save them for publication. The `cowplot` package has some useful function to do just that. 
 ```{r}
-sepalPlot <- p + geom_point(aes(x=Sepal.Length, y=Sepal.Width), size=3)
-petalPlot <- p + geom_point(aes(x=Petal.Length, y=Petal.Width), size=3)
+sepalPlot <- p + geom_point(aes(x=Sepal.Length, y=Sepal.Width), size=3) + scale_color_npg()
+petalPlot <- p + geom_point(aes(x=Petal.Length, y=Petal.Width), size=3) + scale_color_npg()
 
 plot_grid(sepalPlot, petalPlot)
-plot_grid(sepalPlot, petalPlot, labels=LETTERS[1:2])
-plot_grid(sepalPlot+theme(legend.position=""), petalPlot, labels=LETTERS[1:2], ncol=1)
+plot_grid(sepalPlot, petalPlot, labels="AUTO")
+plot_grid(sepalPlot+theme(legend.position=""), petalPlot, labels="auto", ncol=1)
 # Let's save it for publication 
 save_plot(
-  plot_grid(sepalPlot+theme(legend.position=""), petalPlot, labels=LETTERS[1:2], ncol=1),
+  plot_grid(sepalPlot+theme(legend.position=""), petalPlot, labels="auto", ncol=1),
   filename="~/Desktop/flower_area.pdf", base_height=8, base_width=8
 )
 ```
 
 
-## Calculations within a ggplot call
+# Calculations within a ggplot call
 Let's calculate the sepal and petal area:
 ```{r}
 ggplot(iris) + 
@@ -138,7 +164,7 @@ ggplot(iris) +
   theme(legend.position=c(.05,.9))
 ```
 
-## Adding lines and regressions
+# Adding lines and regressions
 ```{r}
 ggplot(iris, aes(x=Sepal.Length*Sepal.Width, y=Petal.Length*Petal.Width, colour=Species, shape=Species)) + 
   geom_point(size=3) +
@@ -156,7 +182,17 @@ ggplot(iris, aes(x=Sepal.Length*Sepal.Width, y=Petal.Length*Petal.Width, colour=
   theme(legend.position=c(.05,.9))
 ```
 
-## Changing colour themes 
+# Addinig regression from a linear model manually
+```{r}
+out <- lm(data=iris, formula= Petal.Width ~ Petal.Length)
+out$coefficients[1]
+out$coefficients[2]
+petalPlot + geom_abline(intercept=out$coefficients[1], slope=out$coefficients[2])
+# which is identical to:
+petalPlot + stat_smooth(aes(x=Petal.Length, y=Petal.Width), col="black", method="lm", se=F)
+```
+
+# Changing colour themes 
 Chanding up colours using the Brewer palettes
 ```{r}
 sepalPlot + scale_color_brewer(palette="Reds")
@@ -167,10 +203,88 @@ For printing you sometimes need a grey scale:
 sepalPlot + scale_color_grey()
 ```
 
+<!--
+## Example of a figure from my pulbications
+```{r Density plot for coupled pnpr with random enforcement of degree, eval=FALSE}
+library(dplyr)
+library(reshape2)
+# library(ggplot2)
+# library(cowplot); theme_set(theme_cowplot())
+# library(ggsci)
+
+folder <- "/Users/marco/Documents/Programming/julia/marcosProjects/culturegroup/results/180814_coupling_pnpr_randomEnforcement/" #LS44PGD
+
+load(paste(folder, "180814_coupling_pnpr_randomEnforcement_summary", sep="")) #LS44PGD
+
+data <- as.data.frame(pnpr2_data)
+data$payoffMethod <- factor(data$payoffMethod, 
+                            levels=c(1,4), 
+                            labels=c("repertoire","proficiency"))
+data$k <- factor(data$k, 
+                 levels=c(2,6,10), 
+                 labels=c("k=2","k=6","k=10"))
+
+lapply(c("k=2","k=6","k=10"), function(x){
+  tmp <- lm(data$recPN[data$k==x]~data$recPR[data$k==x])
+  data.frame(i=tmp$coefficient[1], s=tmp$coefficient[2], row.names=NULL)
+}) %>% bind_rows() -> lmres
+
+q <- ggplot(data=data, aes(colour=payoffMethod, shape=k)) + 
+  scale_color_aaas() + 
+  theme(legend.title=element_blank(), axis.line=element_blank()) + 
+  scale_shape_manual(values=c(17,0,20)) + 
+  panel_border(size=1, colour="black")
+
+p1 <-q + 
+  geom_abline(aes(intercept=lmres$i[1], slope=lmres$s[1]), alpha=.3) +
+  geom_abline(aes(intercept=lmres$i[2], slope=lmres$s[2]), alpha=.3) +
+  geom_abline(aes(intercept=lmres$i[3], slope=lmres$s[3]), alpha=.3) +
+  geom_point(aes(x=recPR, y=recPN), alpha=.75, size=2) + 
+  labs(y=expression(p[n]), x=expression(p[r])) + 
+  theme(legend.position="")
+
+p2 <- q + 
+  geom_point(aes(y=path, x=k), position=position_dodge(width=0.3), size=2) + 
+  labs(x="Degree", y="Average path length") + 
+  theme(legend.position="")
+
+p3 <- q + 
+  geom_point(aes(x=recMedNTraits, y=recMedMaxTraitLevel), alpha=.75, size=2) + 
+  labs(y="Mean highest proficiency", x="Average repertoire size") + 
+  theme(legend.position=c(.62,.8), 
+        legend.text=element_text(size=9), 
+        legend.spacing.y=unit(-2,"mm")) + 
+  scale_x_continuous(limits=c(4.6,6), breaks=c(5,5.5,6), labels=c("5","","6"))
+
+plot_grid(p1,p2,p3, labels=LETTERS[1:3], nrow=1)
+
+# save_plot(plot_grid(p1,p2,p3, labels=LETTERS[1:3], nrow=1), filename=paste(folder,"180814_coupling_pnpr_randomEnforcement_LS44PGD.pdf",sep=""), base_height=3.5, base_width=10)
+```
+-->
 
 
 
-## More Resources
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# More Resources
 * [ggplot2 cheat sheets](https://github.com/rstudio/cheatsheets/blob/master/data-visualization-2.1.pdf)
 
 * for better colour scales have a look at the `viridis` [package](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html)
@@ -181,4 +295,4 @@ sepalPlot + scale_color_grey()
 
 * A gallery of [RMarkdown themes](http://www.datadreaming.org/post/r-markdown-theme-gallery/)
 
-* This document uses the 'leonids' theme of the `prettydoc` package. For more informaiton visit the [development page](http://github.com/yixuan/prettydoc/)
+* This document uses the 'leonids' theme of the `prettydoc` package. For more information visit the [development page](http://github.com/yixuan/prettydoc/)
