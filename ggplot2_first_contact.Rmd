@@ -90,17 +90,19 @@ ggplot(ChickWeight) +
   geom_point(aes(x=Time, y=weight, colour=Diet)) + 
   facet_wrap("Diet")
 
+# Add lines
 ggplot(ChickWeight) + 
   geom_point(aes(x=Time, y=weight, colour=Diet)) + 
   geom_line(aes(x=Time, y=weight, colour=Diet)) + 
   facet_wrap("Diet")
 
 # Add grouping
-  ggplot(ChickWeight) + 
-    geom_point(aes(x=Time, y=weight, colour=Diet)) + 
-    geom_line(aes(x=Time, y=weight, colour=Diet, group=Chick)) + 
-    facet_wrap("Diet")
+ggplot(ChickWeight) + 
+  geom_point(aes(x=Time, y=weight, colour=Diet)) + 
+  geom_line(aes(x=Time, y=weight, colour=Diet, group=Chick)) + 
+  facet_wrap("Diet")
   
+# Use different colour scheme
 library(ggsci)
   ggplot(ChickWeight) + 
     geom_point(aes(x=Time, y=weight, colour=Diet)) + 
@@ -117,7 +119,7 @@ library(ggsci)
 
 
 # Reusing your code
-Let's have a look at some flowers
+Another great feature of `ggplot` is that you can re-use the same code for different variables in your data set, without having to write the code for the same style of figure over and over again. For that, let's have a look at some flowers:
 
 ```{r}
 head(iris)
@@ -130,35 +132,45 @@ ggplot(iris) +
 p <- ggplot(iris, aes(colour=Species)) +
   xlab("Length") +
   ylab("Width") +
-  theme(legend.position=c(.05,.9))
+  theme(legend.position=c(.05,.85))
 p + geom_point(aes(x=Sepal.Length, y=Sepal.Width), size=3) + ggtitle("Sepal")
+
 ## And so we can write for Petal
 p + geom_point(aes(x=Petal.Length, y=Petal.Width), size=3) + ggtitle("Petal")
 ```
 
 
 # Combining plots
-Sometimes you want to combine cerveral plots and save them for publication. The `cowplot` package has some useful function to do just that. 
+It is often useful to combine several plots into a single figure. A package that is especially useful to do this is the `cowplot` package. Let us have a look how to use it: 
+
 ```{r}
-sepalPlot <- p + geom_point(aes(x=Sepal.Length, y=Sepal.Width), size=3) + scale_color_npg()
-petalPlot <- p + geom_point(aes(x=Petal.Length, y=Petal.Width), size=3) + scale_color_npg()
+p <- p + scale_color_npg()
+sepalPlot <- p + geom_point(aes(x=Sepal.Length, y=Sepal.Width), size=3)
+petalPlot <- p + geom_point(aes(x=Petal.Length, y=Petal.Width), size=3)
 
 plot_grid(sepalPlot, petalPlot)
 plot_grid(sepalPlot, petalPlot, labels="AUTO")
 plot_grid(sepalPlot+theme(legend.position=""), petalPlot, labels="auto", ncol=1)
-# Let's save it for publication 
+```
+
+Another very useful function `cowplot` provides is the save function, which lets you easily save a figures as a PNG or PDF:
+```{r}
 save_plot(
-  plot_grid(sepalPlot+theme(legend.position=""), petalPlot, labels="auto", ncol=1),
+  plot_grid(sepalPlot, petalPlot, labels="auto", ncol=1),
   filename="~/Desktop/flower_area.pdf", base_height=8, base_width=8
 )
 ```
+
 
 
 # Calculations within a ggplot call
 Let's calculate the sepal and petal area:
 ```{r}
 ggplot(iris) + 
-  geom_point(aes(x=Sepal.Length*Sepal.Width, y=Petal.Length*Petal.Width, colour=Species, shape=Species), size=3) +
+  geom_point(aes(x=Sepal.Length*Sepal.Width, 
+                 y=Petal.Length*Petal.Width, 
+                 colour=Species, 
+                 shape=Species), size=3) +
   xlab("Sepal area") +
   ylab("Petal area") +
   theme(legend.position=c(.05,.9))
@@ -188,6 +200,7 @@ out <- lm(data=iris, formula= Petal.Width ~ Petal.Length)
 out$coefficients[1]
 out$coefficients[2]
 petalPlot + geom_abline(intercept=out$coefficients[1], slope=out$coefficients[2])
+
 # which is identical to:
 petalPlot + stat_smooth(aes(x=Petal.Length, y=Petal.Width), col="black", method="lm", se=F)
 ```
@@ -202,6 +215,19 @@ For printing you sometimes need a grey scale:
 ```{r}
 sepalPlot + scale_color_grey()
 ```
+
+
+
+# Plotting your own data
+
+```{r}
+df <- data.frame(x=runif(100, -1, 5),
+           y=rnorm(100, 5, 2), 
+           type=sample(c("a","b"), 100, replace=T))
+
+ggplot(df) + geom_point(aes(x=x, y=y, col=type))
+```
+
 
 <!--
 ## Example of a figure from my pulbications
